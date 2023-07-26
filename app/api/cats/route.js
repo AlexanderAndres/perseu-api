@@ -5,36 +5,25 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
 
-  if (id) {
-    console.log("[CAT ID RECIVED]:", id);
-    try {
+  let response;
+  try {
+    if (id) {
+      console.log("[CAT ID RECEIVED]:", id);
       const cat = await prisma.cat.findUnique({
         where: {
           id: parseInt(id),
         },
       });
-      return NextResponse.json({ cat: cat });
-    } catch (error) {
-      return NextResponse.json({
-        message: "An error had ocurred [cats.js]",
-        error: error,
-      });
-    } finally {
-      await prisma.$disconnect();
-      console.log("[cats - DB Disconnect]");
-    }
-  } else {
-    try {
+      response = { cat: cat };
+    } else {
       const cats = await prisma.cat.findMany();
-      return NextResponse.json({ cats: cats });
-    } catch (error) {
-      return NextResponse.json({
-        message: "An error had ocurred [cats.js]",
-        error: error,
-      });
-    } finally {
-      await prisma.$disconnect();
-      console.log("[cats - DB Disconnect]");
+      response = { cats: cats };
     }
+    await prisma.$disconnect();
+    console.log("[cats - DB Disconnect]");
+  } catch (error) {
+    (response = { message: "An error occurred", error: error }),
+      { status: 500 };
   }
+  return NextResponse.json(response);
 }
