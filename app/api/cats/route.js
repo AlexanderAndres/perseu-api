@@ -51,5 +51,4 @@ export async function POST(request) {
   } finally {
     prisma.$disconnect();
   }
-  
 }
