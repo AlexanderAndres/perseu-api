@@ -8,8 +8,18 @@ datasource db {
   relationMode = "prisma"
 }
 
-model Cat {
+model Owner {
   id   Int    @id @default(autoincrement())
   name String
-  age  Int
+  cat  Cat[]
+}
+
+model Cat {
+  id      Int    @id @default(autoincrement())
+  name    String
+  age     Int
+  owner   Owner  @relation(fields: [ownerId], references: [id])
+  ownerId Int
+
+  @@index([ownerId])
 }

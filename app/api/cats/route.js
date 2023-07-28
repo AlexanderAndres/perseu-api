@@ -6,6 +6,8 @@ export async function GET(request) {
   const id = searchParams.get("id");
 
   let response;
+  let status;
+
   try {
     if (id) {
       console.log("[CAT ID RECEIVED]:", id);
@@ -15,15 +17,38 @@ export async function GET(request) {
         },
       });
       response = { cat: cat };
+      status = { status: 200 };
     } else {
-      const cats = await prisma.cat.findMany();
+      const cats = await prisma.cat.findMany({
+        include: {
+          owner: true,
+        },
+      });
       response = { cats: cats };
     }
     await prisma.$disconnect();
     console.log("[cats - DB Disconnect]");
   } catch (error) {
-    (response = { message: "An error occurred", error: error }),
-      { status: 500 };
+    response = { message: "An error occurred", error };
+    status = { status: 500 };
   }
-  return NextResponse.json(response);
+  return NextResponse.json(response, status);
+}
+
+export async function POST(request) {
+  const req = await request.json();
+  try {
+    const insertCat = await prisma.cat.create({
+      data: {
+        name: req.name,
+        age: req.age,
+        ownerId: req.ownerId,
+      },
+    });
+    return NextResponse.json({ nuevoGato: insertCat }, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: error }, { status: 500 });
+  } finally {
+    prisma.$disconnect();
+  }
 }
